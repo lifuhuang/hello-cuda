@@ -1,0 +1,20 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "CUDA",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${CONDA_PREFIX}/lib/python3.13/site-packages/torch/include/**",
+                "${CONDA_PREFIX}/include/**"
+            ],
+            "defines": [
+                "__CUDACC__"
+            ],
+            "compilerPath": "${CUDA_HOME}/bin/nvcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ]
+}
