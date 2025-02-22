@@ -108,7 +108,7 @@ __global__ void kernel_merge(float *a, int lenA, float *b, int lenB, float *c) {
     }
 }
 
-torch::Tensor merge(torch::Tensor a, torch::Tensor b) {
+torch::Tensor merge(torch::Tensor a, torch::Tensor b, int TILES_PER_BLOCK) {
     CHECK_INPUT(a);
     CHECK_INPUT(b);
 
@@ -118,7 +118,6 @@ torch::Tensor merge(torch::Tensor a, torch::Tensor b) {
     auto c = torch::empty(lenC, a.options());
 
     constexpr int TILE_SIZE = 8192;
-    constexpr int TILES_PER_BLOCK = 4;
     int blockSize = 1024;
     int numBlocks = cdiv(lenC, TILE_SIZE * TILES_PER_BLOCK);
     
@@ -132,16 +131,17 @@ torch::Tensor merge(torch::Tensor a, torch::Tensor b) {
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.def("merge", &merge, "Tensor Merge");
 }
-
+ 
 using namespace std;
-int main() {
-    int sizes[] = {100, 1000000, 10000000};
 
-    for (int i = 0; i < 3; ++i ) {
-        int size = sizes[i];
+int main() {
+    int size = 10000000;
+    int tiles_per_block[] = {1, 2, 4, 8, 16, 32, 64, 128, 256};
+
+    for (int i = 0; i < 9; ++i ) {
         torch::Tensor a = std::get<0>(torch::randn({size}, torch::kFloat).cuda().sort(0));
         torch::Tensor b = std::get<0>(torch::randn({size}, torch::kFloat).cuda().sort(0));
-        auto c = merge(a, b);
+        auto c = merge(a, b, tiles_per_block[i]);
         auto c_p = std::get<0>(torch::concat({a, b}, 0).sort(0));
         auto res = c.equal(c_p);
         printf("correct = %s\n", res ? "true" : "false");
